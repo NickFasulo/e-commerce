@@ -1,0 +1,15 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+.row {
+  padding-bottom: 25px;
+}
+
+.card {
+  width: 18rem;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  min-height: 430px;
+}
