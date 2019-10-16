@@ -8,11 +8,14 @@ const passport = require('passport');
 const flash = require('connect-flash');
 const session = require('express-session');
 const expressValidator = require('express-validator');
+const methodOverride = require('method-override');
 
 let MongoStore = require('connect-mongo')(session);
 
-const indexRouter = require('./routes/index');
+const indexRouter = require('./routes');
 const usersRouter = require('./routes/users/users');
+const adminRouter = require('./routes/admin/admin');
+const productsRouter = require('./routes/products/products');
 
 require('dotenv').config();
 
@@ -35,6 +38,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(methodOverride('_method'));
 app.use(
   session({
     resave: true,
@@ -90,14 +94,16 @@ app.use((req, res, next) => {
 
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/products', productsRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use((req, res, next) => {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use((err, req, res, next) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

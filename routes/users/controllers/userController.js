@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
+const hasher = require('hasher');
+const gravatar = require('../utils/gravatar');
 
 module.exports = {
   signup: (req, res, next) => {
@@ -22,41 +24,40 @@ module.exports = {
           newUser.email = req.body.email;
           newUser.password = req.body.password;
           newUser.profile.name = req.body.name;
+          newUser.profile.picture = 
+          newUser.password = hasher.create(req.body.password).then(hash => {
+            newUser.password = hash;
 
-          bcrypt.genSalt(10, (err, salt) => {
-            bcrypt.hash(newUser.password, salt, (err, hash) => {
-              if (err) {
-                reject(err);
-              } else {
-                newUser.password = hash;
-
-                newUser
-                  .save()
-                  .then(user => {
-                    req.login(user, err => {
-                      if (err) {
-                        res.status(400).json({
-                          confirmation: false,
-                          message: err
-                        });
-                      } else {
-                        res.redirect(301, '/');
-                      }
-                    });
-                  })
-                  .catch(err => {
-                    throw err;
-                  });
-              }
+            newUser.save().then(user => {
+              req.login(user);
             });
           });
+          // finish ^
+          newUser
+            .save()
+            .then(user => {
+              req.login(user, err => {
+                if (err) {
+                  res.status(400).json({
+                    confirmation: false,
+                    message: err
+                  });
+                } else {
+                  res.redirect(301, '/');
+                }
+              });
+            })
+            .catch(err => {
+              throw err;
+            });
         }
       })
       .catch(err => {
         throw err;
       });
   },
-  signin: (params) => {
+  // Dont use, use passport.authenticate() instead.
+  signin: params => {
     return new Promise((resolve, reject) => {
       User.findOne({ email: params.email })
         .then(user => {
@@ -84,6 +85,33 @@ module.exports = {
           }
         })
         .catch(err => reject(err));
+    });
+  },
+  updateProfile: (params, id) => {
+    return new Promise((resolve, reject) => {
+      User.findById(id).then(user => {
+        if (params.name != '') user.profile.name = params.name;
+        if (params.address != '') user.address = params.address;
+        if (params.email != '') user.email = params.email;
+        if (params.password != '') {
+          hasher
+            .create(params.password)
+            .then(hash => {
+              user.password = hash;
+            })
+            .catch(err => {
+              reject(err);
+            });
+        }
+        user
+          .save()
+          .then(user => {
+            resolve(user);
+          })
+          .catch(err => {
+            reject(err);
+          });
+      });
     });
   }
 };
