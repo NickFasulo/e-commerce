@@ -5,7 +5,12 @@ router.get('/', (req, res) => {
   res.send('hey from admin');
 });
 
-router.get('add-category', (req, res) => {
+// http://localhost:3000/api/admin/add-category
+router.get('/add-category', (req, res) => {
+  res.render('products/addcategory');
+});
+
+router.post('/add-category', (req, res) => {
   res.render('products/addcategory');
 });
 

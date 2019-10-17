@@ -24,14 +24,15 @@ module.exports = {
           newUser.email = req.body.email;
           newUser.password = req.body.password;
           newUser.profile.name = req.body.name;
-          newUser.profile.picture = 
-          newUser.password = hasher.create(req.body.password).then(hash => {
-            newUser.password = hash;
+          newUser.profile.picture = newUser.password = hasher
+            .create(req.body.password)
+            .then(hash => {
+              newUser.password = hash;
 
-            newUser.save().then(user => {
-              req.login(user);
+              newUser.save().then(user => {
+                req.login(user);
+              });
             });
-          });
           // finish ^
           newUser
             .save()
@@ -90,27 +91,58 @@ module.exports = {
   updateProfile: (params, id) => {
     return new Promise((resolve, reject) => {
       User.findById(id).then(user => {
-        if (params.name != '') user.profile.name = params.name;
-        if (params.address != '') user.address = params.address;
-        if (params.email != '') user.email = params.email;
-        if (params.password != '') {
+        if (
+          params.password != '' ||
+          params.password_2 != '' ||
+          params.oldPassword != ''
+        ) {
+          if (params.password != params.password_2)
+            reject('New passwords do not match!');
+
           hasher
-            .create(params.password)
-            .then(hash => {
-              user.password = hash;
+            .compare(params.oldPassword, user.password)
+            .then(result => {
+              if (!result) reject('Old password is not correct!');
+
+              hasher
+                .create(params.password)
+                .then(hash => {
+                  user.password = hash;
+
+                  if (params.name != '') user.profile.name = params.name;
+                  if (params.address != '') user.address = params.address;
+                  if (params.email != '') user.email = params.email;
+
+                  user
+                    .save()
+                    .then(user => {
+                      resolve(user);
+                    })
+                    .catch(err => {
+                      reject(err);
+                    });
+                })
+                .catch(err => {
+                  reject(err);
+                });
+            })
+            .catch(err => {
+              reject(err);
+            });
+        } else {
+          if (params.name != '') user.profile.name = params.name;
+          if (params.address != '') user.address = params.address;
+          if (params.email != '') user.email = params.email;
+
+          user
+            .save()
+            .then(user => {
+              resolve(user);
             })
             .catch(err => {
               reject(err);
             });
         }
-        user
-          .save()
-          .then(user => {
-            resolve(user);
-          })
-          .catch(err => {
-            reject(err);
-          });
       });
     });
   }
