@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
-const hasher = require('hasher');
+const hasher = require('../utils/hasher');
 const gravatar = require('../utils/gravatar');
 
 module.exports = {
@@ -97,7 +97,7 @@ module.exports = {
           params.oldPassword != ''
         ) {
           if (params.password != params.password_2)
-            reject('New passwords do not match!');
+            reject('New Passwords do not match!');
 
           hasher
             .compare(params.oldPassword, user.password)
